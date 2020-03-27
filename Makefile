@@ -3,28 +3,42 @@
 CC= g++
 CFLAGS= -g -std=c++11
 
-all: testreader
+all: lookupserver lookupclient PutCGI PutHTML
 
-# Ref Object
 Ref.o : Ref.h Ref.cpp
 	$(CC) $(CFLAGS) -c Ref.cpp
 
-# Verse Object
 Verse.o : Ref.h Verse.h Verse.cpp
 	$(CC) $(CFLAGS) -c Verse.cpp
 
-# Bible Object
 Bible.o : Ref.h Verse.h Bible.h Bible.cpp
 	$(CC) $(CFLAGS) -c Bible.cpp
+	
+fifo.o: fifo.cpp fifo.h
+	$(CC) $(CFLAGS) -c fifo.cpp
 
-# Main Program source
-testreader.o : Ref.h Verse.h Bible.h testreader.cpp
-	$(CC) $(CFLAGS) -c testreader.cpp
+lookupserver.o: LookupServer.cpp fifo.h Bible.h
+	$(CC) $(CFLAGS) -c LookupServer.cpp
 
-# Build the executable
-testreader: Ref.o Verse.o Bible.o testreader.o
-	$(CC) $(CFLAGS) -o testreader Ref.o Verse.o Bible.o testreader.o
+lookupclient.o: LookupClient.cpp fifo.h
+	$(CC) $(CFLAGS) -c LookupClient.cpp
 
-# "make clean" will clean up by removing intermediate files
+lookupserver: LookupServer.o fifo.o Bible.o Ref.o Verse.o
+	$(CC) $(CFLAGS) -o lookupserver LookupServer.o fifo.o Bible.o Ref.o Verse.o
+
+lookupclient: LookupClient.o fifo.o Bible.o Ref.o Verse.o
+	$(CC) $(CFLAGS) -o lookupclient LookupClient.o fifo.o Bible.o Ref.o Verse.o -lcgicc
+	
+PutCGI: lookupclient
+		chmod 757 lookupclient
+		cp lookupclient /var/www/html/class/csc3004/tergingerich/cgi-bin/
+		echo "Current contents of your cgi-bin directory: "
+		ls -l /var/www/html/class/csc3004/tergingerich/cgi-bin/
+
+PutHTML: bibleajax.html
+		cp bibleajax.html  /var/www/html/class/csc3004/tergingerich
+		echo "Current contents of your HTML directory: "
+		ls -l  /var/www/html/class/csc3004/tergingerich
+
 clean:
-	rm -f *.o testreader core
+	rm *.o *# *~ lookupclient lookupserver

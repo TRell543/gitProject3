@@ -39,33 +39,29 @@ const int Bible::buildIndex(string file){
 		bibleRefs[ref] = pos;
 	}
 	instream.close();
+	cout << "References: " << bibleRefs.size() << endl;
 	return 1;
 }
 
-// Lookup finds a given verse reference in this Bible
+// Lookup finds a given verse reference in the Bible file
 const Verse Bible::lookup(Ref ref, LookupResult& status) {
 	instream.open(infile);
 	if(!instream){
 		cerr << "Error: could not open the file " << infile << endl;
 		exit(0);
 	}
-	instream.seekg(bibleRefs[ref]);	// goes to position of reference in the Bible file
-	// gets the line from the file, creates a reference, and checks if the reference is equal to desired reference
-	while(!instream.fail() && status == OTHER){
-		getline(instream, currentLine);
+ 	if (bibleRefs.find(ref) != bibleRefs.end()) {
+     	instream.seekg(bibleRefs[ref]);
+     	getline(instream, currentLine);
 		Ref currentRef(currentLine);
 		if(currentRef.operator==(ref))
 			status = SUCCESS;
-		// error check if the chapter does not exist
-		if(currentRef.getBook() > ref.getBook()) {
-			status = NO_CHAPTER;
-			break;
-		}
-		// error check if the verse does not exist
-		if(currentRef.getBook() == ref.getBook() && currentRef.getChap() > ref.getChap()) {
+ 	} else {
+		Ref testRef(ref.getBook(), ref.getChap(), 1);
+		if(bibleRefs.find(testRef) != bibleRefs.end())
 			status = NO_VERSE;
-			break;
-		}
+		else
+			status = NO_CHAPTER;
 	}
 	instream.close();
 	Verse aVerse(currentLine);
@@ -73,7 +69,7 @@ const Verse Bible::lookup(Ref ref, LookupResult& status) {
 }
 
 // Return the next reference after the given reference
-const Ref Bible::next(Ref ref) {
+const Ref Bible::next(Ref ref, LookupResult& status) {
 	instream.open(infile);
 	if(!instream){
 		cerr << "Error: could not open the file " << infile << endl;
@@ -84,6 +80,13 @@ const Ref Bible::next(Ref ref) {
 	getline(instream, currentLine);
 	instream.close();
 	Ref nextRef(currentLine);
+	Ref testRef(nextRef.getBook(), nextRef.getChap(), 1);
+	if(bibleRefs.find(testRef) != bibleRefs.end())
+		status = NO_VERSE;
+	else if(bibleRefs.find(testRef) == bibleRefs.end())
+		status = NO_CHAPTER;
+	else
+		status = SUCCESS;
 	return nextRef;
 }
 

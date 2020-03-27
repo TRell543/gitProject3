@@ -64,19 +64,6 @@ int main(int argc, char** argv) {
 		numOfVerses--;
 	}
 	
-	// Check if result is set to NO_CHAPTER and if so, display error message
-	if (result == NO_CHAPTER) {
-		cerr << webBible.error(result) << c << " in " << ref.getBookName(b) 
-			 << " or no such verse " << v << " in " << ref.getBookName(b) << " " << c << endl;
-		exit(0);
-	}
-
-	// Check if result is set to NO_VERSE and if so, display error message
-	if (result == NO_VERSE) {
-		cerr << webBible.error(result) << v << " in " << ref.getBookName(b) << " " << c << endl;
-		exit(0);
-	}
-	
 	// If fourth parameter is greater than 0, get the next verse, look it up, and display it with only verse number
 	while (numOfVerses > 0) {
 		result = OTHER;
